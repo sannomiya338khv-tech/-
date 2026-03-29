@@ -517,7 +517,8 @@
                     option.dataset.rate = plan.rate;
                     option.dataset.feeType = plan.feeType;
                     option.dataset.feeValue = plan.feeValue;
-                    option.dataset.guaranteeType = plan.guaranteeType;
+                    option.dataset.guaranteeType = plan.guaranteeType || 'none';
+                    option.dataset.guaranteeValue = plan.guaranteeValue || 0; // ★これを追加
                     planSelect.appendChild(option);
                 });
             }
@@ -622,6 +623,8 @@ function calculateMonthlyPayment(amount, rateYear, years) {
                     }
 
                     const gType = selectedOption.dataset.guaranteeType || 'none';
+                    const gVal = parseFloat(selectedOption.dataset.guaranteeValue) || 0; // ★これを追加
+
                     if (gType === 'lump') {
                         guaranteeText = "別途見積";
                         guaranteeNote = "※一括払いが必要（借入額により変動）";
@@ -629,6 +632,14 @@ function calculateMonthlyPayment(amount, rateYear, years) {
                         guaranteeVal = Math.round(amount * 0.011); 
                         guaranteeText = guaranteeVal.toLocaleString() + " 円";
                         guaranteeNote = "※1.1%概算";
+                    } else if (gType === 'fixed') { // ★定額(円)の場合を追加
+                        guaranteeVal = gVal;
+                        guaranteeText = guaranteeVal.toLocaleString() + " 円";
+                        guaranteeNote = "";
+                    } else if (gType === 'rate') { // ★定率(%)の場合を追加
+                        guaranteeVal = Math.round(amount * gVal);
+                        guaranteeText = guaranteeVal.toLocaleString() + " 円";
+                        guaranteeNote = `※${(gVal * 100).toFixed(2)}%概算`;
                     }
                 }
 
@@ -779,6 +790,34 @@ function calculateMonthlyPayment(amount, rateYear, years) {
                     valDiv.innerHTML = `<span class="text-[10px] text-gray-500 block mb-1">手数料 (円 or %)</span><input type="number" step="${stepVal}" id="input-feeValue-${bank.id}-${idx}" class="w-full border border-gray-300 rounded p-1 text-right" value="${displayVal}">`;
                     wrapper.appendChild(valDiv);
 
+                    // ★ここから追加：保証料の入力欄
+                    const gTypeDiv = document.createElement("div");
+                    gTypeDiv.className = "w-[48%] md:w-1/5 mt-2 md:mt-0";
+                    const gTypeSelect = document.createElement("select");
+                    gTypeSelect.className = "w-full border border-gray-300 rounded p-1 text-xs";
+                    gTypeSelect.id = `input-gType-${bank.id}-${idx}`;
+                    
+                    let currentGType = plan.guaranteeType || "none";
+                    if (currentGType === "rate_lump_1.1") { currentGType = "rate"; plan.guaranteeValue = 0.011; }
+                    
+                    const opts =[ {val: "none", text: "なし"}, {val: "fixed", text: "定額(円)"}, {val: "rate", text: "定率(%)"}, {val: "lump", text: "別途見積"} ];
+                    opts.forEach(o => {
+                        const opt = document.createElement("option"); opt.value = o.val; opt.textContent = o.text;
+                        if(currentGType === o.val) opt.selected = true;
+                        gTypeSelect.appendChild(opt);
+                    });
+                    gTypeDiv.innerHTML = `<span class="text-[10px] text-gray-500 block mb-1">保証料タイプ</span>`;
+                    gTypeDiv.appendChild(gTypeSelect);
+                    wrapper.appendChild(gTypeDiv);
+
+                    const gValDiv = document.createElement("div");
+                    gValDiv.className = "w-[48%] md:w-1/5 mt-2 md:mt-0";
+                    let gDisplayVal = currentGType === "rate" ? ((plan.guaranteeValue || 0) * 100).toFixed(2) : (plan.guaranteeValue || 0);
+                    let gStepVal = currentGType === "rate" ? "0.01" : "1000";
+                    gValDiv.innerHTML = `<span class="text-[10px] text-gray-500 block mb-1">保証料 (円 or %)</span><input type="number" step="${gStepVal}" id="input-gValue-${bank.id}-${idx}" class="w-full border border-gray-300 rounded p-1 text-right" value="${gDisplayVal}">`;
+                    wrapper.appendChild(gValDiv);
+                    // ★追加ここまで
+
                     grid.appendChild(wrapper);
                 });
                 body.appendChild(grid);
@@ -828,7 +867,7 @@ function calculateMonthlyPayment(amount, rateYear, years) {
                     const rateEl = document.getElementById("input-rate-" + bank.id + "-" + idx);
                     if (rateEl) { const val = parseFloat(rateEl.value); if (!isNaN(val)) plan.rate = val; }
                     
-                    const typeEl = document.getElementById("input-feeType-" + bank.id + "-" + idx);
+               const typeEl = document.getElementById("input-feeType-" + bank.id + "-" + idx);
                     const valEl = document.getElementById("input-feeValue-" + bank.id + "-" + idx);
                     if (typeEl && valEl) {
                         const newType = typeEl.value;
@@ -838,8 +877,21 @@ function calculateMonthlyPayment(amount, rateYear, years) {
                             if (newType === "rate") { plan.feeValue = newVal / 100; } else { plan.feeValue = newVal; }
                         }
                     }
+
+                    // ★ここから追加：保証料の保存処理
+                    const gTypeEl = document.getElementById("input-gType-" + bank.id + "-" + idx);
+                    const gValEl = document.getElementById("input-gValue-" + bank.id + "-" + idx);
+                    if (gTypeEl && gValEl) {
+                        const newGType = gTypeEl.value;
+                        let newGVal = parseFloat(gValEl.value);
+                        if (!isNaN(newGVal)) {
+                            plan.guaranteeType = newGType;
+                            if (newGType === "rate") { plan.guaranteeValue = newGVal / 100; } else { plan.guaranteeValue = newGVal; }
+                        }
+                    }
+                    // ★追加ここまで
                 });
-            });
+            });     
             
             // ★更新した金利データをスマホ（ブラウザ）に永続保存する
             try {
