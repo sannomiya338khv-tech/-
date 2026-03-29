@@ -1,0 +1,170 @@
+ @page { size: A4 portrait; margin: 0; }
+        body { 
+            background-color: #525659; 
+            font-family: "Noto Sans JP", sans-serif;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            padding-top: 4rem;
+        }
+        
+        .sheet {
+            width: 100%; 
+            max-width: 210mm;
+            min-height: 297mm;
+            background: white; 
+            margin: 10mm auto; 
+            padding: 10mm 15mm;
+            position: relative; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sheet-bank-select {
+            height: auto !important;
+            min-height: 297mm;
+            max-width: 1200px;
+        }
+
+        /* スマホ向けのレスポンシブ対応（A4固定を解除して画面に合わせる） */
+        @media (max-width: 768px) {
+            body { padding-top: 4.5rem; background-color: #f3f4f6; }
+            .sheet {
+                margin: 0 0 1rem 0;
+                padding: 4vw;
+                max-width: 100%;
+                min-height: auto;
+                height: auto;
+                box-shadow: none;
+                border-radius: 0;
+            }
+            #sheet-bank-select {
+                min-height: auto;
+            }
+        }
+
+        @media print {
+            body { background: none; margin: 0; padding-top: 0; }
+            .sheet { 
+                margin: 0; 
+                box-shadow: none; 
+                width: 100%; 
+                height: 297mm; 
+                page-break-after: always;
+                padding: 10mm 12mm; 
+            }
+            .sheet:last-child {
+                page-break-after: auto;
+            }
+            #sheet-bank-select { display: none !important; }
+            .no-print { display: none !important; }
+            input, select { 
+                border: none !important; 
+                background: transparent !important; 
+                appearance: none; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                width: auto !important;
+            }
+            select { -webkit-appearance: none; -moz-appearance: none; text-indent: 1px; text-overflow: ''; }
+            select::-ms-expand { display: none; }
+            ::placeholder { color: transparent; }
+            .text-right { text-align: right !important; }
+            .row-action { display: none !important; }
+            .drag-handle { display: none !important; }
+            .toggle-btn { display: none !important; }
+            .input-currency { font-weight: bold; }
+        }
+
+        .input-currency {
+            text-align: right;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+        }
+        .section-title {
+            @apply text-lg font-bold text-primary border-b-4 border-primary pb-1 mb-3 flex items-center;
+        }
+        
+        .bank-card {
+            @apply bg-white p-4 rounded-xl border-2 border-gray-200 shadow-sm cursor-pointer hover:border-accent hover:shadow-lg transition-all flex flex-col relative;
+        }
+        .bank-card:hover {
+            transform: translateY(-3px);
+        }
+        .bank-card.active {
+            @apply border-2 border-accent bg-blue-50 shadow-md;
+        }
+        .bank-card.active::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            @apply absolute top-2 right-2 text-accent text-xl;
+        }
+        
+        .rate-badge { @apply text-[10px] px-2 py-0.5 rounded font-bold; }
+        .plan-info { @apply flex justify-between items-center bg-gray-50 px-3 py-2 rounded-lg mb-1.5 border border-gray-100; }
+        .feature-badge { @apply text-[9px] font-bold px-2 py-0.5 rounded-full inline-block mb-1; }
+        .sortable-ghost { @apply bg-blue-50 border-2 border-dashed border-accent opacity-50; }
+        
+        .header-select {
+            background-color: transparent;
+            color: #9ca3af;
+            font-weight: bold;
+            font-size: 0.75rem;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            text-align: right;
+            appearance: none;
+            -webkit-appearance: none;
+            direction: rtl;
+            padding-right: 1.5rem;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+        }
+        .header-select option {
+            color: #1f2937;
+            background-color: #fff;
+            direction: ltr;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    /* ==================================
+   固都税ツール専用のスタイル
+================================== */
+.tax-table th, .tax-table td {
+    border-bottom: 1px solid #E2E8F0;
+    padding: 4px 6px;
+    font-size: 11px;
+    vertical-align: middle;
+}
+.tax-table th {
+    background-color: #F1F5F9;
+    color: #2C3E50;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 2px solid #2C3E50;
+    white-space: nowrap;
+}
+.tax-table input, .tax-table select {
+    width: 100%; border: none; background: transparent;
+    font-weight: bold; outline: none; padding: 2px; color: #334155;
+}
+.tax-table input:focus, .tax-table select:focus {
+    background-color: #F0F8FF; border-radius: 2px;
+}
+.row-group-border { border-bottom: 2px solid #94A3B8; }
+.share-input-group { display: flex; align-items: center; justify-content: center; gap: 2px; }
+.share-input { width: 30px !important; text-align: center !important; border-bottom: 1px solid #ccc !important; }
+
+/* ハイライトエフェクト */
+.highlight-seller .seller-section { background-color: #FFF7ED; border: 2px solid #F97316; border-radius: 8px; transform: scale(1.02); transition: all 0.3s; }
+.highlight-seller .seller-amount { color: #C2410C; font-size: 2rem; }
+.highlight-buyer .buyer-section { background-color: #EFF6FF; border: 2px solid #4285F4; border-radius: 8px; transform: scale(1.02); transition: all 0.3s; }
+.highlight-buyer .buyer-amount { color: #1E40AF; font-size: 2rem; }

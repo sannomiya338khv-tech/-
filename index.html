@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>資金計画・諸費用計算書</title>
+
+    <!-- PWA化 & リッチアイコン自動生成スクリプト -->
+    <script>
+    try {
+        (function() {
+            var c = document.createElement('canvas');
+            c.width = 512; c.height = 512;
+            var ctx = c.getContext('2d');
+            
+            // 背景
+            var grd = ctx.createLinearGradient(0, 0, 512, 512);
+            grd.addColorStop(0, '#2C3E50'); grd.addColorStop(1, '#1A252F');
+            ctx.fillStyle = grd; ctx.fillRect(0,0,512,512);
+            
+            // 装飾
+            ctx.beginPath(); ctx.arc(256, -50, 400, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'; ctx.fill();
+            
+            // シンボルマーク
+            ctx.beginPath(); ctx.arc(256, 200, 110, 0, 2 * Math.PI);
+            ctx.fillStyle = '#4285F4'; ctx.fill();
+            ctx.lineWidth = 12; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+            
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 140px sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('¥', 256, 210);
+            
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 85px sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('資金計画', 256, 400);
+
+            var iconUrl = c.toDataURL('image/png');
+
+            // iOS用設定
+            var m1 = document.createElement('meta'); m1.name = 'apple-mobile-web-app-capable'; m1.content = 'yes'; document.head.appendChild(m1);
+            var m2 = document.createElement('meta'); m2.name = 'apple-mobile-web-app-status-bar-style'; m2.content = 'black-translucent'; document.head.appendChild(m2);
+            var m3 = document.createElement('meta'); m3.name = 'apple-mobile-web-app-title'; m3.content = '資金計画'; document.head.appendChild(m3);
+            var appleIcon = document.createElement('link'); appleIcon.rel = 'apple-touch-icon'; appleIcon.href = iconUrl; document.head.appendChild(appleIcon);
+            var favicon = document.createElement('link'); favicon.rel = 'icon'; favicon.type = 'image/png'; favicon.href = iconUrl; document.head.appendChild(favicon);
+
+            // Android・PC用マニフェスト（start_urlを ./ に修正）
+            var manifest = {
+                "name": "資金計画・諸費用計算ツール",
+                "short_name": "資金計画",
+                "start_url": "./",
+                "display": "standalone",
+                "background_color": "#2C3E50",
+                "theme_color": "#2C3E50",
+                "icons": [{"src": iconUrl, "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}]
+            };
+            var blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+            var link = document.createElement('link'); link.rel = 'manifest'; link.href = URL.createObjectURL(blob); document.head.appendChild(link);
+        })();
+    } catch(e) { console.error("アイコン設定エラー", e); }
+    </script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SortableJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js" crossorigin="anonymous"></script>
+    
+    <!-- アプリデータ保存領域 -->
+    <script id="app-data-storage" type="application/json">{}</script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2C3E50',
+                        secondary: '#34495E',
+                        accent: '#4285F4',
+                        alert: '#EA4335',
+                        success: '#34A853',
+                        bgray: '#F3F4F6',
+                        flat35: '#4F46E5'
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans JP"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <!-- 分割したCSSを読み込む -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="antialiased">
+
+    <!-- 操作パネル -->
+    <div class="no-print fixed top-0 left-0 w-full bg-gray-900 text-white p-2 z-50 shadow-lg flex justify-between items-center h-16">
+        <div class="flex items-center gap-4 pl-2 flex-1 overflow-hidden">
+            <h1 class="text-sm md:text-lg font-bold flex items-center whitespace-nowrap flex-shrink-0">
+                <i class="fas fa-calculator mr-2 text-accent"></i> 
+                <span class="hidden md:inline">資金計画・諸費用計算書</span>
+                <span class="md:hidden">資金計画ツール</span>
+            </h1>
+            
+            <div class="flex items-center bg-gray-800 rounded px-2 py-1 ml-4 border border-gray-700 flex-shrink min-w-[200px] max-w-[400px]">
+                <button onclick="toggleExpenseModal()" class="text-gray-300 hover:text-white px-2 py-1 mr-1 rounded hover:bg-gray-700 transition" title="諸費用リストを表示・編集">
+                    <i class="fas fa-list-ul"></i>
+                </button>
+                <select id="globalItemSelector" onchange="switchGlobalTarget(this.value)" class="header-select w-32 mr-2 truncate">
+                    <option value="propertyPrice" selected="selected">物件価格</option>
+                    <option value="downPayment">自己資金（頭金）</option>
+                </select>
+                <input type="text" id="globalPropertyPrice" class="bg-transparent text-white font-bold text-lg w-28 md:w-36 text-right outline-none focus:border-b-2 focus:border-accent transition-colors ime-normal" placeholder="0" onfocus="removeFormat(this)" oninput="toHalfWidth(this); handleGlobalInput(this)" onblur="formatCurrency(this)" value="30,000,000">
+                <span class="text-sm font-bold ml-1 text-gray-400">円</span>
+            </div>
+        </div>
+
+        <div class="flex gap-2 pr-2 flex-shrink-0">
+            <button onclick="toggleAppMode()" id="modeToggleBtn" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded text-xs md:text-sm font-bold transition flex items-center whitespace-nowrap" title="固都税精算書へ切替">
+                <i class="fas fa-exchange-alt md:mr-2"></i> <span class="hidden md:inline">固都税へ切替</span>
+            </button>
+            <!-- インストールボタン追加 -->
+            <button id="install-app-btn" class="hidden bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded text-xs md:text-sm font-bold transition flex items-center whitespace-nowrap animate-pulse" title="アプリをインストール">
+                <i class="fas fa-download md:mr-2"></i> <span class="hidden md:inline">アプリ化</span>
+            </button>
+            <button onclick="openRateModal()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded text-xs md:text-sm font-bold transition flex items-center whitespace-nowrap" title="金利設定">
+                <i class="fas fa-cog md:mr-2"></i> <span class="hidden md:inline">設定</span>
+            </button>
+            <button onclick="downloadHTML()" class="bg-teal-600 hover:bg-teal-500 px-3 py-1.5 rounded text-xs md:text-sm font-bold transition flex items-center whitespace-nowrap" title="保存">
+                <i class="fas fa-save md:mr-2"></i> <span class="hidden md:inline">保存</span>
+            </button>
+            <button onclick="window.print()" class="bg-green-600 hover:bg-green-500 px-3 py-1.5 rounded text-xs md:text-sm font-bold transition flex items-center whitespace-nowrap" title="印刷">
+                <i class="fas fa-print md:mr-2"></i> <span class="hidden md:inline">印刷</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 諸費用編集ポップアップ -->
+    <div id="expenseListModal" class="no-print fixed top-16 left-0 md:left-64 z-[55] bg-white border border-gray-300 shadow-xl rounded-b-lg rounded-tr-lg p-4 w-full md:w-[500px] hidden transform transition-all duration-200">
+        <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200">
+            <h3 class="font-bold text-primary text-sm flex items-center">
+                <i class="fas fa-list-alt mr-2 text-accent"></i> 諸費用内訳エディタ
+            </h3>
+            <button onclick="toggleExpenseModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="max-h-[60vh] overflow-y-auto custom-scrollbar pr-1" id="expenseModalListContainer"></div>
+        <div class="mt-3 pt-2 border-t border-gray-100 flex justify-between items-center">
+            <div class="text-xs text-gray-500">※ここでの編集は即座に反映されます</div>
+            <button onclick="addExpenseFromModal()" class="bg-primary text-white text-xs px-3 py-1.5 rounded hover:bg-gray-700 transition">
+                <i class="fas fa-plus mr-1"></i> 項目を追加
+            </button>
+        </div>
+    </div>
+
+    <!-- 金利設定モーダル -->
+    <div id="rateModal" class="no-print fixed inset-0 bg-black bg-opacity-50 z-[60] hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-[900px] max-w-[95vw] max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-xl font-bold text-primary flex items-center"><i class="fas fa-edit mr-2"></i> 金利・手数料データ管理</h3>
+                <button onclick="closeRateModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="overflow-y-auto flex-1 pr-2 custom-scrollbar" id="rateModalContent"></div>
+            <div class="mt-6 flex justify-end gap-3 pt-4 border-t">
+                <button onclick="closeRateModal()" class="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded font-bold">キャンセル</button>
+                <button onclick="updateRates()" class="px-6 py-2 bg-primary text-white rounded hover:bg-gray-700 font-bold shadow flex items-center"><i class="fas fa-sync-alt mr-2"></i> 全データ更新・反映</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sheet 1: 金融機関選択 -->
+    <div id="sheet-bank-select" class="sheet bg-gray-50 border-4 border-dashed border-gray-300 flex flex-col">
+        <div class="text-center mb-6 flex-shrink-0">
+            <span class="bg-gray-600 text-white px-4 py-1 rounded-full text-sm font-bold tracking-wider">STEP 1</span>
+            <h2 class="text-3xl font-bold text-primary mt-3">金融機関を選択してください</h2>
+            <p class="text-gray-500 mt-2 text-sm">各金融機関の金利・プランをクリックして選択します</p>
+        </div>
+        <div id="bankCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4 pb-8">
+            <!-- JSで動的生成 -->
+        </div>
+        <div class="text-center text-gray-400 text-xs py-2 mt-auto">※このページは印刷されません</div>
+    </div>
+
+    <!-- Sheet 2: 諸費用計算 -->
+    <div id="sheet-expenses" class="sheet">
+        <div class="flex justify-between items-end border-b-2 border-gray-300 pb-1 mb-2">
+            <div class="flex items-center gap-4 w-2/3">
+                <h1 class="text-xl font-bold text-primary whitespace-nowrap">資金計画・諸費用計算書 (1/2)</h1>
+                <input type="text" id="headerCustomerName" class="font-bold text-lg text-primary border-b border-gray-300 focus:border-accent outline-none w-full bg-transparent px-2" placeholder="様" oninput="syncCustomerName(this.value)" value="芳秋様">
+            </div>
+            <p class="text-xs text-gray-500" id="currentDate">2025年12月15日</p>
+        </div>
+
+        <div class="flex-1">
+            <h2 class="section-title text-base mb-3">
+                <span class="w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center text-[10px] mr-2">1</span>
+                物件価格・諸費用内訳
+            </h2>
+
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm mb-3">
+                <div class="flex justify-between items-center mb-2 pb-2 border-b-2 border-gray-300">
+                    <label class="font-bold text-base text-primary whitespace-nowrap">物件価格</label>
+                    <div class="flex items-center ml-2">
+                        <input type="text" id="propertyPrice" data-global-id="propertyPrice" class="text-2xl font-bold text-right w-32 sm:w-48 bg-white border border-gray-300 rounded px-2 py-0.5 focus:border-accent outline-none text-primary ime-normal" value="30,000,000" placeholder="0" onfocus="removeFormat(this)" oninput="toHalfWidth(this); handleSheetInputChange(this)" onblur="formatCurrency(this)">
+                        <span class="ml-2 font-bold text-base">円</span>
+                    </div>
+                </div>
+
+                <div class="mb-1">
+                    <p class="font-bold text-xs text-gray-600 mb-1 border-l-4 border-accent pl-2">諸費用内訳 <span class="text-[9px] font-normal text-gray-400 ml-1">※銀行手数料は含みません</span></p>
+                    <div id="expensesList" class="space-y-1 pl-2 text-sm">
+                        <!-- 初期設定項目はJS側で生成 -->
+                    </div>
+                </div>
+
+                <div class="text-right mb-2 no-print">
+                    <button onclick="addExpenseRow()" class="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-0.5 rounded transition">
+                        <i class="fas fa-plus"></i> 項目を追加
+                    </button>
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t-2 border-gray-400 mb-3 bg-white p-2 rounded-lg border border-gray-200">
+                    <label class="font-bold text-base text-gray-800">総額（物件＋諸費用）</label>
+                    <div class="flex items-center">
+                        <span id="grandTotal" class="text-xl font-black text-primary">0</span>
+                        <span class="ml-2 font-bold text-base">円</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mb-1 px-2">
+                    <label class="font-bold text-sm text-gray-600 whitespace-nowrap">自己資金（頭金）</label>
+                    <div class="flex items-center ml-2">
+                        <span class="text-gray-400 mr-1 sm:mr-2 text-lg font-bold">-</span>
+                        <input type="text" id="downPayment" data-global-id="downPayment" class="text-lg font-bold text-right w-24 sm:w-36 bg-white border border-gray-300 rounded px-2 py-1 text-red-600 focus:border-accent outline-none ime-normal" value="0" onfocus="removeFormat(this)" oninput="toHalfWidth(this); handleSheetInputChange(this)" onblur="formatCurrency(this)">
+                        <span class="ml-1 sm:ml-2 font-bold text-sm">円</span>
+                    </div>
+                </div>
+                
+                <div class="border-t border-dashed border-gray-400 my-2"></div>
+                
+                <div class="flex justify-between items-center mb-0 px-2">
+                    <label class="font-bold text-xs text-gray-600 whitespace-nowrap">融資事務手数料・保証料 <span class="text-[9px] bg-gray-200 px-1 rounded ml-1">別途</span></label>
+                    <div class="flex items-center ml-2">
+                        <span class="text-gray-400 mr-1 sm:mr-2 text-xs font-bold">+</span>
+                        <input type="text" id="separateFeeInput" class="text-base font-bold text-right w-24 sm:w-36 bg-gray-100 border border-transparent rounded px-2 py-0.5 text-gray-600" value="0" readonly>
+                        <span class="ml-1 sm:ml-2 font-bold text-xs">円</span>
+                    </div>
+                </div>
+                <p class="text-[9px] text-red-500 text-right pr-2">※お借入額には含まれません（別途現金が必要です）</p>
+            </div>
+
+            <div class="bg-accent text-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                <div>
+                    <label class="font-bold text-lg block">お借入必要額</label>
+                    <span class="text-[10px] font-normal opacity-80">(総額 - 自己資金)</span>
+                </div>
+                <div class="flex items-center">
+                    <span id="loanAmountDisplay" class="text-3xl font-black">0</span>
+                    <span class="ml-2 font-bold text-lg">円</span>
+                </div>
+            </div>
+        </div>
+        <div class="text-center text-xs text-gray-400 mt-auto">1/2 Page</div>
+    </div>
+
+    <!-- Sheet 3: シミュレーション -->
+    <div id="sheet-simulation" class="sheet">
+        <div class="flex justify-between items-end border-b-2 border-gray-300 pb-1 mb-4">
+            <h2 class="text-xs font-bold text-gray-500">資金計画・諸費用計算書 (2/2)</h2>
+            <div class="text-sm font-bold text-primary"><span id="headerCustomerNameDisplay">芳秋様</span></div>
+        </div>
+
+        <div class="flex-1 flex flex-col">
+            <h2 class="section-title text-base mb-3">
+                <span class="w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center text-[10px] mr-2">2</span>
+                返済シミュレーション
+            </h2>
+
+            <div class="bg-white border-2 border-primary rounded-xl p-4 shadow-sm mb-4">
+                <h3 class="text-xs font-bold text-gray-500 mb-2 border-b pb-1">シミュレーション条件</h3>
+                
+                <div class="mb-3 pb-2 border-b border-dashed border-gray-200">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-[10px] font-bold text-gray-400">物件価格</label>
+                        <div class="text-lg font-bold text-primary"><span id="sim_display_property">0</span> <span class="text-xs">円</span></div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <label class="text-[10px] font-bold text-accent">借入総額</label>
+                        <div class="text-xl font-black text-accent"><span id="sim_display_loan">0</span> <span class="text-sm">円</span></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">金融機関</label>
+                        <select id="sim_bank" onchange="updatePlans()" class="w-full font-bold text-base text-primary border-b border-gray-200 focus:border-accent outline-none bg-transparent py-0.5"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">適用プラン</label>
+                        <select id="sim_plan" onchange="updateRateFromPlan()" class="w-full font-bold text-xs text-primary border-b border-gray-200 focus:border-accent outline-none bg-transparent py-0.5"></select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">借入金利</label>
+                        <div class="flex items-end border-b border-gray-200">
+                            <input type="number" id="sim_rate" class="w-full font-bold text-xl text-right text-primary focus:border-accent outline-none bg-transparent" step="0.001" oninput="calculateLoan()" value="0.500">
+                            <span class="ml-1 text-sm font-bold text-gray-600 mb-1">%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">返済期間</label>
+                        <div class="flex items-end border-b border-gray-200">
+                            <select id="sim_years" class="w-full font-bold text-xl text-right text-primary focus:border-accent outline-none bg-transparent" onchange="calculateLoan()">
+                                <option value="35" selected="selected">35</option>
+                                <option value="40">40</option>
+                                <option value="50">50</option>
+                                <option value="30">30</option>
+                                <option value="25">25</option>
+                                <option value="20">20</option>
+                            </select>
+                            <span class="ml-1 text-sm font-bold text-gray-600 mb-1">年</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 relative overflow-hidden mb-4">
+                <div class="absolute top-0 left-0 w-2 h-full bg-accent"></div>
+                <div class="flex justify-between items-end border-b-2 border-gray-300 pb-3 mb-3">
+                    <span class="text-sm font-bold text-gray-600">月々のご返済額 <span class="text-[10px] font-normal">(当初)</span></span>
+                    <div class="text-4xl font-black text-primary tracking-tighter">
+                        <span id="res_monthly">0</span>
+                        <span class="text-lg font-bold ml-1">円</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white p-3 rounded-lg border border-gray-200">
+                        <h4 class="font-bold text-xs text-gray-700 mb-2 flex items-center"><i class="fas fa-money-check-alt mr-2 text-accent"></i> 銀行諸費用（概算）</h4>
+                        <div class="space-y-1 text-xs">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-500">事務手数料</span>
+                                <span class="font-bold text-sm"><span id="res_fee">0</span> 円</span>
+                            </div>
+                            <div class="flex justify-between items-center border-t border-dashed border-gray-200 pt-1">
+                                <span class="text-gray-500">保証料</span>
+                                <span class="font-bold text-sm"><span id="res_guarantee">0 円</span></span>
+                            </div>
+                            <p class="text-[9px] text-alert text-right" id="res_guarantee_note">なし</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg border border-gray-200">
+                        <h4 class="font-bold text-xs text-gray-700 mb-2 flex items-center"><i class="fas fa-coins mr-2 text-accent"></i> 総支払額（概算）</h4>
+                        <div class="space-y-1">
+                            <p class="text-[9px] text-gray-500">借入元金 + 全期間利息</p>
+                            <p class="text-xl font-bold text-primary text-right"><span id="res_total">0</span> <span class="text-xs">円</span></p>
+                            <p class="text-[9px] text-gray-400 text-right">※金利変動がないと仮定した場合</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+           <!-- マンション等ランニングコスト・総支払額 -->
+            <div class="mt-4 flex flex-col gap-3">
+                <div class="bg-white border-2 border-gray-200 rounded-xl p-3 shadow-sm">
+                    <h3 class="font-bold text-gray-700 mb-2 flex items-center border-b pb-1 text-xs">
+                        <i class="fas fa-building mr-2 text-accent"></i> ランニングコスト（月額目安）
+                        <span class="text-[9px] font-normal text-gray-400 ml-2">※戸建ての場合は固都税目安のみ入力</span>
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">管理費</label>
+                            <div class="flex items-end border-b border-gray-200">
+                                <input type="text" id="run_management" class="w-full font-bold text-sm text-right text-gray-700 focus:border-accent outline-none bg-transparent input-currency ime-normal" value="0" onfocus="removeFormat(this)" oninput="toHalfWidth(this); calcRunningCost()" onblur="formatCurrency(this)">
+                                <span class="ml-1 text-[10px] font-bold text-gray-400 mb-0.5">円</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">修繕積立金</label>
+                            <div class="flex items-end border-b border-gray-200">
+                                <input type="text" id="run_repair" class="w-full font-bold text-sm text-right text-gray-700 focus:border-accent outline-none bg-transparent input-currency ime-normal" value="0" onfocus="removeFormat(this)" oninput="toHalfWidth(this); calcRunningCost()" onblur="formatCurrency(this)">
+                                <span class="ml-1 text-[10px] font-bold text-gray-400 mb-0.5">円</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">駐車場・他</label>
+                            <div class="flex items-end border-b border-gray-200">
+                                <input type="text" id="run_parking" class="w-full font-bold text-sm text-right text-gray-700 focus:border-accent outline-none bg-transparent input-currency ime-normal" value="0" onfocus="removeFormat(this)" oninput="toHalfWidth(this); calcRunningCost()" onblur="formatCurrency(this)">
+                                <span class="ml-1 text-[10px] font-bold text-gray-400 mb-0.5">円</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">固都税(月割)</label>
+                            <div class="flex items-end border-b border-gray-200">
+                                <input type="text" id="run_tax" class="w-full font-bold text-sm text-right text-gray-700 focus:border-accent outline-none bg-transparent input-currency ime-normal" value="0" onfocus="removeFormat(this)" oninput="toHalfWidth(this); calcRunningCost()" onblur="formatCurrency(this)">
+                                <span class="ml-1 text-[10px] font-bold text-gray-400 mb-0.5">円</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border-2 border-accent rounded-xl p-3 shadow-md flex justify-between items-center">
+                    <div>
+                        <span class="text-sm font-bold text-primary block">月々の総支払額 <span class="text-[10px] font-normal text-gray-500">(目安)</span></span>
+                        <span class="text-[10px] text-gray-500 font-bold">ローン返済額 ＋ ランニングコスト合計</span>
+                    </div>
+                    <div class="flex items-end">
+                        <span id="res_grand_monthly" class="text-3xl font-black text-accent tracking-tighter">0</span>
+                        <span class="text-sm font-bold text-gray-600 ml-1 mb-1">円</span>
+                    </div>
+                </div>
+            </div>
+        <div class="mt-auto flex justify-between items-end border-t border-gray-200 pt-3"></div>
+            <div class="text-xs text-gray-400">2/2 Page</div>
+            <div class="text-right text-xs text-gray-500">株式会社リード・リアルエステート</div>
+        </div>
+    </div>
+    <!-- Sheet 4: 固定資産税精算書 (初期状態は非表示) -->
+    <div id="sheet-tax" class="sheet hidden flex-col">
+        <div class="flex justify-between items-end border-b-4 border-primary pb-2 mb-6">
+            <div class="flex flex-col gap-1">
+                <input type="text" id="taxCustomerName" class="text-left w-64 text-sm font-bold border-b border-transparent hover:border-gray-300 focus:border-accent outline-none" value="お客様 各位" placeholder="お客様名" oninput="syncCustomerName(this.value)">
+                <h1 class="text-2xl font-bold text-primary tracking-tight">固定資産税・都市計画税 精算書</h1>
+            </div>
+            <div class="text-right">
+                <p class="text-xs text-gray-500" id="taxCurrentDate">2026年3月29日</p>
+                <p class="text-[10px] text-gray-400">株式会社リード・リアルエステート</p>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-base font-bold text-primary flex items-center">
+                    <span class="w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center text-[10px] mr-2">1</span>
+                    公課証明書 内容 <span class="text-xs font-normal text-gray-500 ml-2">（令和<span id="taxYear">2026</span>年度分）</span>
+                </h2>
+                <div class="flex items-center gap-4 no-print">
+                    <div class="flex items-center text-xs bg-gray-100 rounded px-2 py-1 border border-gray-300">
+                        <span class="mr-2 font-bold text-gray-600">税額端数処理:</span>
+                        <label class="flex items-center cursor-pointer mr-3"><input type="radio" name="roundingMode" value="floor1" checked="checked" onchange="calcTotalTax()" class="mr-1"> 1円単位</label>
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="roundingMode" value="floor100" onchange="calcTotalTax()" class="mr-1"> 100円切捨</label>
+                    </div>
+                    <button onclick="addTaxRow('land', '', 0, 0, 1, 1)" class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded transition">
+                        <i class="fas fa-plus"></i> 行を追加
+                    </button>
+                </div>
+            </div>
+
+            <div class="border-2 border-primary rounded-lg p-4 bg-white shadow-sm">
+                <table class="tax-table w-full text-left border-collapse" id="taxTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 12%;">区分</th><th style="width: 25%;">摘要</th><th style="width: 10%;">税目</th>
+                            <th>課税標準額 (円)</th><th style="width: 8%;">税率</th><th style="width: 12%;">持分</th>
+                            <th>算出税額 (円)</th><th class="no-print" style="width: 20px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="taxTableBody"></tbody>
+                    <tfoot>
+                        <tr class="bg-gray-50 border-t-2 border-gray-300 font-bold">
+                            <td colspan="6" class="text-right pr-4 text-gray-600 text-xs py-2">年税額合計 (持分考慮・端数処理後)</td>
+                            <td><input type="text" id="totalAnnualTax" value="0" class="currency text-primary text-base font-black text-right w-full bg-transparent outline-none" onfocus="removeFormat(this)" oninput="toHalfWidth(this); calcProration(); reflectAnnualToRunningCost()" onblur="formatCurrency(this); calcProration(); reflectAnnualToRunningCost()"></td>
+                            <td class="no-print"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div class="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-dashed border-gray-300 text-xs text-gray-500 font-bold">
+                    ※自動計算： 年税額 ÷ 12ヶ月 ＝ 資金計画の「固都税(月割)」に反映されます
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-base font-bold text-primary flex items-center">
+                    <span class="w-5 h-5 bg-accent text-white rounded-full flex items-center justify-center text-[10px] mr-2">2</span>
+                    日割り精算計算
+                </h2>
+                <div class="no-print flex items-center text-xs bg-gray-100 rounded px-2 py-1 border border-gray-300">
+                    <span class="mr-2 font-bold text-gray-600">強調表示:</span>
+                    <label class="flex items-center cursor-pointer mr-3"><input type="radio" name="highlightMode" value="buyer" checked="checked" onchange="toggleHighlight()" class="mr-1"> 買主様</label>
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="highlightMode" value="seller" onchange="toggleHighlight()" class="mr-1"> 売主様</label>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-6 flex items-center gap-6 shadow-sm">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">引渡し日 (決済日)</label>
+                    <input type="date" id="handoverDate" class="border border-gray-300 rounded p-1 text-lg font-bold text-primary focus:border-accent outline-none bg-white" onchange="calcProration()">
+                </div>
+                <div class="flex-1">
+                    <p class="text-xs text-gray-500 mb-1">起算日設定</p>
+                    <div class="flex gap-4">
+                        <label class="flex items-center text-sm font-bold cursor-pointer hover:bg-blue-100 px-2 py-1 rounded transition"><input type="radio" name="startDate" value="jan1" checked="checked" onchange="calcProration()" class="mr-2 cursor-pointer"> 1月1日 起算 (北海道標準)</label>
+                        <label class="flex items-center text-sm text-gray-500 cursor-pointer hover:bg-blue-100 px-2 py-1 rounded transition"><input type="radio" name="startDate" value="apr1" onchange="calcProration()" class="mr-2 cursor-pointer"> 4月1日 起算</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-box shadow-sm highlight-buyer border-2 border-accent rounded-lg p-4 bg-gray-50" id="resultArea">
+                <div class="grid grid-cols-2 gap-8 relative">
+                    <div class="absolute left-1/2 top-2 bottom-2 w-px bg-gray-300"></div>
+                    <div class="seller-section p-2">
+                        <h3 class="text-center font-bold text-gray-500 mb-4 border-b border-gray-300 pb-1 text-sm">売主様 ご負担分</h3>
+                        <div class="space-y-3 px-2">
+                            <div class="flex justify-between text-sm"><span class="text-gray-500 text-xs">負担期間</span><span class="font-bold text-gray-700 text-right text-xs"><span id="sellerPeriod">--/-- 〜 --/--</span></span></div>
+                            <div class="flex justify-between text-sm"><span class="text-gray-500 text-xs">日数</span><span class="font-bold text-gray-700"><span id="sellerDays">0</span> 日分</span></div>
+                            <div class="text-right mt-2"><p class="text-[10px] text-gray-400 mb-1">精算額</p><p class="text-xl font-bold text-gray-400 seller-amount"><span id="sellerAmount">0</span> <span class="text-sm">円</span></p></div>
+                        </div>
+                    </div>
+                    <div class="buyer-section p-2">
+                        <h3 class="text-center font-bold text-accent mb-4 border-b border-accent pb-1 text-sm">買主様 ご負担分</h3>
+                        <div class="space-y-3 px-2">
+                            <div class="flex justify-between text-sm"><span class="text-gray-500 text-xs">負担期間</span><span class="font-bold text-primary text-right text-xs"><span id="buyerPeriod">--/-- 〜 --/--</span></span></div>
+                            <div class="flex justify-between text-sm"><span class="text-gray-500 text-xs">日数</span><span class="font-bold text-primary"><span id="buyerDays">0</span> 日分</span></div>
+                            <div class="text-right mt-2">
+                                <p class="text-[10px] text-accent mb-1 font-bold">精算額 (決済時支払額)</p>
+                                <p class="text-xl font-black text-accent buyer-amount"><span id="buyerAmount">0</span> <span class="text-sm">円</span></p>
+                                <!-- ★資金計画へ反映ボタン -->
+                                <button onclick="reflectTaxToExpenses()" class="no-print mt-2 bg-accent text-white hover:bg-blue-600 px-3 py-1.5 rounded text-xs font-bold transition shadow-sm w-full">
+                                    <i class="fas fa-arrow-circle-up mr-1"></i> 資金計画の諸費用に反映
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-auto border-t border-gray-300 pt-2 flex justify-between text-[10px] text-gray-400">
+                <p>※本計算書は概算であり、実際の公課証明書と端数処理等で異なる場合があります。</p>
+                <p>1/1 Page</p>
+            </div>
+        </div>
+    </div>
+    <!-- Sheet 4: 固定資産税精算書 (初期状態は非表示) -->
+    <div id="sheet-tax" class="sheet hidden flex-col">
+        <div class="flex justify-between items-end border-b-4 border-primary pb-2 mb-6">
+            <div class="flex flex-col gap-1">
+                <input type="text" id="taxCustomerName" class="text-left w-64 text-sm font-bold border-b border-transparent hover:border-gray-300 focus:border-accent outline-none" value="お客様 各位" placeholder="お客様名" oninput="syncCustomerName(this.value)">
+                <h1 class="text-2xl font-bold text-primary tracking-tight">固定資産税・都市計画税 精算書</h1>
+            </div>
+            <div class="text-right">
+                <p class="text-xs text-gray-500" id="taxCurrentDate">2026年3月29日</p>
+                <p class="text-[10px] text-gray-400">株式会社リード・リアルエステート</p>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-base font-bold text-primary flex items-center">
+                    <span class="w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center text-[10px] mr-2">1</span>
+                    公課証明書 内容 <span class="text-xs font-normal text-gray-500 ml-2">（令和<span id="taxYear">2026</span>年度分）</span>
+                </h2>
+                <div class="flex items-center gap-4 no-print">
+                    <div class="flex items-center text-xs bg-gray-100 rounded px-2 py-1 border border-gray-300">
+                        <span class="mr-2 font-bold text-gray-600">税額端数処理:</span>
+                        <label class="flex items-center cursor-pointer mr-3"><input type="radio" name="roundingMode" value="floor1" checked="checked" onchange="calcTotalTax()" class="mr-1"> 1円単位</label>
+                        <label class="flex items-center cursor-pointer"><input type="radio" name="roundingMode" value="floor100" onchange="calcTotalTax()" class="mr-1"> 100円切捨</label>
+                    </div>
+                    <button onclick="addTaxRow('land', '', 0, 0, 1, 1)" class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded transition">
+                        <i class="fas fa-plus"></i> 行を追加
+                    </button>
+                </div>
+            </div>
+
+            <div class="border-2 border-primary rounded-lg p-4 bg-white shadow-sm">
+                <table class="tax-table w-full text-left border-collapse" id="taxTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 12%;">区分</th><th style="width: 25%;">摘要</th><th style="width: 10%;">税目</th>
+                            <th>課税標準額 (円)</th><th style="width: 8%;">税率</th><th style="width: 12%;">持分</th>
+                            <th>算出税額 (円)</th><th class="no-print" style="width: 20px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="taxTableBody"></tbody>
+                    <tfoot>
+                        <tr class="bg-gray-50 border-t-2 border-gray-300 font-bold">
+                            <td colspan="6" class="text-right pr-4 text-gray-600 text-xs py-2">年税額合計 (持分考慮・端数処理後)</td>
+                            <td><input type="text" id="totalAnnualTax" value="0" readonly class="currency text-primary text-base font-black text-right w-full bg-transparent outline-none"></td>
+                            <td class="no-print"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div class="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-dashed border-gray-300 text-xs text-gray-500 font-bold">
+                    ※自動計算： 年税額 ÷ 12ヶ月 ＝ 資金計画の「固都税(月割)」に反映されます
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-base font-bold text-primary flex items-center">
+                    <span class="w-5 h-5 bg-accent text-white rounded-full flex items-center justify-center text-[10px] mr-2">2</span>
+                    日割り精算計算
+                </h2>
+                <div class="no-print flex items-center text-xs bg-gray-100 rounded px-2 py-1 border border-gray-300">
+                    <span class="mr-2 font-bold text-gray-600">強調表示:</span>
+                    <label class="flex items-center cursor-pointer mr-3"><input type="radio" name="highlightMode" value="buyer" checked="checked" onchange="toggleHighlight()" class="mr-1"> 買主様</label>
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="highlightMode" value="seller" onchange="toggleHighlight()" class="mr-1"> 売主様</label>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-6 flex items-center gap-6 shadow-sm">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">引渡し日 (決済日)</label>
+                    <input type="date" id="handoverDate" class="border border-gray-300 rounded p-1 text-lg font-bold text-primary focus:border-accent outline-none bg-white" onchange="calcProration()">
+                </div>
+                <div class="flex-1">
+                    <p class="text-xs text-gray-500 mb-1">起算日設定</p>
+                    <div class="flex gap-4">
+                        <label class="flex items-center text-sm font-bold cursor-pointer hover:bg-blue-100 px-2 py-1 rounded transition"><input type="radio" name="startDate" value="jan1" checked="checked" onchange="calcProration()" class="mr-2 cursor-pointer"> 1月1日 起算 (北海道標準)</label>
+                        <label class="flex items-center text-sm text-gray-500 cursor-pointer hover:bg-blue-100 px-2 py-1 rounded transition"><input type="radio" name="startDate" value="apr1" onchange="calcProration()" class="mr-2 cursor-pointer"> 4月1日 起算</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-box shadow-sm highlight-buyer border-2 border-accent rounded-lg p-4 bg-gray-50" id="resultArea">
+                <div class="grid grid-cols-2 gap-8 relative">
+                    <div class="absolute left-1/2 top-2 bottom-2 w-px bg-gray-300"></div>
+                    <div class="seller-section p-2">
+                        <h3 class="text-center font-bold text-gray-500 mb-4 border-b border-gray-300 pb-1 text-sm">売主様 ご負担分</h3>
+                        <div class="space-y-3 px-2">
+                            <div class="flex justify-between text-sm"><span class="text-gray-500 text-xs">負担期間</span><span class="font-bold text-gray-700 text-right text-xs"><span id="sellerPeriod">--/-- 〜 --/--</span></span></div>
+                            <div class="flex justify-between text-sm"><span class="text-gray-500 text-xs">日数</span><span class="font-bold text-gray-700"><span id="sellerDays">0</span> 日分</span></div>
+                            <div class="text-right mt-2"><p class="text-[10px] text-gray-400 mb-1">精算額</p><p class="text-xl font-bold text-gray-400 seller-amount"><span id="sellerAmount">0</span> <span class="text-sm">円</span></p></div>
+                        </div>
+                    </div>
+                    <div class="buyer-section p-2">
+                        <h3 class="text-center font-bold text-accent mb-4 border-b border-accent pb-1 text-sm">買主様 ご負担分</h3>
+                        <div class="space-y-3 px-2">
+                            <div class="flex justify-between text-sm"><span class="text-gray-500 text-xs">負担期間</span><span class="font-bold text-primary text-right text-xs"><span id="buyerPeriod">--/-- 〜 --/--</span></span></div>
+                            <div class="flex justify-between text-sm"><span class="text-gray-500 text-xs">日数</span><span class="font-bold text-primary"><span id="buyerDays">0</span> 日分</span></div>
+                            <div class="text-right mt-2">
+                                <p class="text-[10px] text-accent mb-1 font-bold">精算額 (決済時支払額)</p>
+                                <p class="text-xl font-black text-accent buyer-amount"><span id="buyerAmount">0</span> <span class="text-sm">円</span></p>
+                                <!-- ★資金計画へ反映ボタン -->
+                                <button onclick="reflectTaxToExpenses()" class="no-print mt-2 bg-accent text-white hover:bg-blue-600 px-3 py-1.5 rounded text-xs font-bold transition shadow-sm w-full">
+                                    <i class="fas fa-arrow-circle-up mr-1"></i> 資金計画の諸費用に反映
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-auto border-t border-gray-300 pt-2 flex justify-between text-[10px] text-gray-400">
+                <p>※本計算書は概算であり、実際の公課証明書と端数処理等で異なる場合があります。</p>
+                <p>1/1 Page</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWAインストール機能追加 -->
+    <script src="data.js"></script>
+    <!-- ★固都税用の計算プログラムを新規追加します -->
+    <script src="tax.js"></script>
+    <script src="main.js"></script>
+
+    <!-- PWAインストール機能追加 -->
+    <script src="data.js"></script>
+    <!-- ★固都税用の計算プログラムを新規追加します -->
+    <script src="tax.js"></script>
+    <script src="main.js"></script>
+
+   <script src="data.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
