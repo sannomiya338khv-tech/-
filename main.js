@@ -842,11 +842,15 @@ function calculateMonthlyPayment(amount, rateYear, years) {
             document.getElementById('headerCustomerNameDisplay').innerText = val || "　　様";
         }
 
-        function downloadHTML() {
+        async function downloadHTML() {
             saveAppDataToDOM();
 
+            // 現在の入力値をDOMに焼き付ける
             document.querySelectorAll('input').forEach(input => {
-                if(input.type === 'text' || input.type === 'number') {
+                if(input.type === 'radio' || input.type === 'checkbox') {
+                    if(input.checked) input.setAttribute('checked', 'checked');
+                    else input.removeAttribute('checked');
+                } else {
                     input.setAttribute('value', input.value);
                 }
             });
@@ -858,12 +862,51 @@ function calculateMonthlyPayment(amount, rateYear, years) {
                 });
             });
             
-            const htmlContent = document.documentElement.outerHTML;
-            const blob = new Blob([htmlContent], { type: 'text/html' });
+            // HTMLの複製を作成して、外部ファイルを内部に埋め込む
+            const cloneDoc = document.documentElement.cloneNode(true);
+            
+            try {
+                // CSSを吸い込んで埋め込む
+                const cssRes = await fetch('style.css');
+                if(cssRes.ok) {
+                    const cssText = await cssRes.text();
+                    const linkTag = cloneDoc.querySelector('link[href="style.css"]');
+                    if(linkTag) {
+                        const styleTag = document.createElement('style');
+                        styleTag.textContent = cssText;
+                        linkTag.parentNode.replaceChild(styleTag, linkTag);
+                    }
+                }
+                
+                // JSを吸い込んで埋め込む
+                const scripts = ['data.js', 'tax.js', 'main.js'];
+                for(const src of scripts) {
+                    const jsRes = await fetch(src);
+                    if(jsRes.ok) {
+                        const jsText = await jsRes.text();
+                        const scriptTag = cloneDoc.querySelector(`script[src="${src}"]`);
+                        if(scriptTag) {
+                            const newScript = document.createElement('script');
+                            newScript.textContent = jsText;
+                            scriptTag.parentNode.replaceChild(newScript, scriptTag);
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error("ファイルの埋め込みに失敗しました", e);
+            }
+
+            const htmlContent = cloneDoc.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'Financial-Plan.html';
+            
+            // お客様名でファイル名を作成
+            let title = document.getElementById('headerCustomerName')?.value;
+            if(!title || title === "様") title = "お客様";
+            a.download = '資金計画_' + title.replace(/[\\/:*?"<>|]/g, '') + '.html';
+            
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
