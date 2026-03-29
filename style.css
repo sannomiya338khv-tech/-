@@ -168,3 +168,46 @@
 .highlight-seller .seller-amount { color: #C2410C; font-size: 2rem; }
 .highlight-buyer .buyer-section { background-color: #EFF6FF; border: 2px solid #4285F4; border-radius: 8px; transform: scale(1.02); transition: all 0.3s; }
 .highlight-buyer .buyer-amount { color: #1E40AF; font-size: 2rem; }
+
+/* ==================================
+   スマホ閲覧用の最適化（レスポンシブ）
+================================== */
+@media screen and (max-width: 768px) {
+    /* A4サイズの固定を解除してスマホ画面に合わせる */
+    body {
+        background-color: #f3f4f6;
+        padding-top: 4.5rem;
+    }
+    .sheet {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        min-height: auto;
+        margin: 0 0 1rem 0;
+        padding: 5vw;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    /* 固都税の表が潰れないように、横スクロール（スワイプ）可能にする */
+    #taxTable {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+    .tax-table th, .tax-table td {
+        min-width: 80px; /* 最低限のセル幅を確保 */
+    }
+
+    /* 左右に並んだ要素をスマホでは縦積みにするなどの微調整 */
+    .grid-cols-2 {
+        gap: 0.75rem;
+    }
+    
+    /* iPhoneで入力欄をタップした時に勝手に画面がズームされるのを防ぐ */
+    input[type="text"], input[type="number"], select {
+        font-size: 16px !important;
+    }
+}
