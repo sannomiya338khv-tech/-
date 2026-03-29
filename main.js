@@ -544,6 +544,26 @@
             return Math.round((amount * rateMonth * x) / (x - 1));
         }
 
+function calculateMonthlyPayment(amount, rateYear, years) {
+            if (amount <= 0 || isNaN(amount)) return 0;
+            if (isNaN(rateYear) || isNaN(years) || years <= 0) return 0;
+            if (rateYear <= 0) return Math.round(amount / (years * 12));
+            const rateMonth = rateYear / 12;
+            const numPayments = years * 12;
+            const x = Math.pow(1 + rateMonth, numPayments);
+            return Math.round((amount * rateMonth * x) / (x - 1));
+        }
+
+        // ★ここに追加：ボーナス加算額から「ボーナス充当分の元金」を逆算する
+        function calculateBonusPrincipal(bonusAmount, rateYear, years) {
+            if (bonusAmount <= 0 || isNaN(bonusAmount)) return 0;
+            const rateHalf = rateYear / 2;
+            const numPayments = years * 2;
+            if (rateHalf <= 0) return bonusAmount * numPayments;
+            const x = Math.pow(1 + rateHalf, numPayments);
+            return Math.round((bonusAmount * (x - 1)) / (rateHalf * x));
+        }
+        
         function calculateLoan(fromCalcTotal = false) {
             if(isCalculating) return;
             isCalculating = true;
@@ -557,8 +577,18 @@
                 let years = parseInt(document.getElementById('sim_years').value);
                 if(isNaN(years) || years <= 0) years = 35;
                 
-                let monthly = calculateMonthlyPayment(amount, rateYear, years);
-                let total = monthly * years * 12;
+                // ★ボーナス加算額の取得と元金の逆算
+                const bonusAmount = getNumber(document.getElementById('sim_bonus').value) || 0;
+                let bonusPrincipal = calculateBonusPrincipal(bonusAmount, rateYear, years);
+                if (bonusPrincipal > amount) bonusPrincipal = amount; // 上限ストッパー
+                
+                // ★月々に充てる元金と、月々の返済額の計算
+                let monthlyPrincipal = amount - bonusPrincipal;
+                if (monthlyPrincipal < 0) monthlyPrincipal = 0;
+                let monthly = calculateMonthlyPayment(monthlyPrincipal, rateYear, years);
+                
+                // ★総支払額の計算（月々分 ＋ ボーナス分）
+                let total = (monthly * years * 12) + (bonusAmount * years * 2);
 
                 const planSelect = document.getElementById('sim_plan');
                 const selectedOption = planSelect.options[planSelect.selectedIndex];
@@ -597,21 +627,25 @@
                 document.getElementById('res_guarantee').innerText = guaranteeText;
                 document.getElementById('res_guarantee_note').innerText = guaranteeNote;
 
-                const loan100 = amount + 1000000;
-                const loan200 = amount + 2000000;
-                const monthly100 = calculateMonthlyPayment(loan100, rateYear, years);
-                const monthly200 = calculateMonthlyPayment(loan200, rateYear, years);
-                const diff100 = monthly100 - monthly;
-                const diff200 = monthly200 - monthly;
-
-                document.getElementById('comp_loan_100').innerText = loan100.toLocaleString();
-                document.getElementById('comp_monthly_100').innerText = monthly100.toLocaleString();
-                document.getElementById('comp_diff_100').innerText = diff100.toLocaleString();
-                document.getElementById('comp_loan_200').innerText = loan200.toLocaleString();
-                document.getElementById('comp_monthly_200').innerText = monthly200.toLocaleString();
-                document.getElementById('comp_diff_200').innerText = diff200.toLocaleString();
-
+                // ★ボーナス関連の画面表示切り替え
+                const bonusRow = document.getElementById('res_bonus_row');
+                const bonusTotalRow = document.getElementById('res_bonus_total_row');
+                const runBonusNote = document.getElementById('run_bonus_note');
+                
+                if (bonusAmount > 0) {
+                    document.getElementById('res_bonus_amount').innerText = bonusAmount.toLocaleString();
+                    document.getElementById('res_bonus_total_month').innerText = (monthly + bonusAmount).toLocaleString();
+                    if(bonusRow) bonusRow.classList.remove('hidden');
+                    if(bonusTotalRow) bonusTotalRow.classList.remove('hidden');
+                    if(runBonusNote) runBonusNote.classList.remove('hidden');
+                } else {
+                    if(bonusRow) bonusRow.classList.add('hidden');
+                    if(bonusTotalRow) bonusTotalRow.classList.add('hidden');
+                    if(runBonusNote) runBonusNote.classList.add('hidden');
+                }
+                
                 calcRunningCost();
+
             } catch (e) {
                 console.error("calculateLoan error: ", e);
             } finally {

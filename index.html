@@ -303,7 +303,8 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <!-- ★ gap-4 の後ろに mb-3 を追加します -->
+                <div class="grid grid-cols-2 gap-4 mb-3">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 mb-1">借入金利</label>
                         <div class="flex items-end border-b border-gray-200">
@@ -326,15 +327,32 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- ★ ここにボーナス払いの入力欄を追加 -->
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1">ボーナス払い（1回加算額 / 年2回）</label>
+                    <div class="flex items-end border-b border-gray-200 w-1/2">
+                        <input type="text" id="sim_bonus" class="w-full font-bold text-xl text-right text-primary focus:border-accent outline-none bg-transparent input-currency ime-normal" value="0" onfocus="removeFormat(this)" oninput="toHalfWidth(this); calculateLoan()" onblur="formatCurrency(this)">
+                        <span class="ml-1 text-sm font-bold text-gray-600 mb-1">円</span>
+                    </div>
+                </div>
             </div>
 
             <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 relative overflow-hidden mb-4">
                 <div class="absolute top-0 left-0 w-2 h-full bg-accent"></div>
-                <div class="flex justify-between items-end border-b-2 border-gray-300 pb-3 mb-3">
-                    <span class="text-sm font-bold text-gray-600">月々のご返済額 <span class="text-[10px] font-normal">(当初)</span></span>
-                    <div class="text-4xl font-black text-primary tracking-tighter">
-                        <span id="res_monthly">0</span>
-                        <span class="text-lg font-bold ml-1">円</span>
+                <div class="flex justify-between items-end border-b-2 border-gray-300 pb-2 mb-3">
+                    <div>
+                        <span class="text-sm font-bold text-gray-600 block">月々のご返済額 <span class="text-[10px] font-normal">(当初)</span></span>
+                        <span id="res_bonus_row" class="text-[10px] font-bold text-accent mt-1 hidden block">ボーナス月加算: +<span id="res_bonus_amount">0</span>円</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl font-black text-primary tracking-tighter">
+                            <span id="res_monthly">0</span>
+                            <span class="text-lg font-bold ml-1">円</span>
+                        </div>
+                        <div id="res_bonus_total_row" class="text-[10px] text-gray-500 mt-1 hidden">
+                            ボーナス月合計: <span id="res_bonus_total_month" class="font-bold text-xs text-primary">0</span>円
+                        </div>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -402,10 +420,11 @@
                     </div>
                 </div>
 
-                <div class="bg-blue-50 border-2 border-accent rounded-xl p-3 shadow-md flex justify-between items-center">
+               <div class="bg-blue-50 border-2 border-accent rounded-xl p-3 shadow-md flex justify-between items-center">
                     <div>
                         <span class="text-sm font-bold text-primary block">月々の総支払額 <span class="text-[10px] font-normal text-gray-500">(目安)</span></span>
-                        <span class="text-[10px] text-gray-500 font-bold">ローン返済額 ＋ ランニングコスト合計</span>
+                        <span class="text-[10px] text-gray-500 font-bold block">ローン返済額 ＋ ランニングコスト合計</span>
+                        <span id="run_bonus_note" class="text-[9px] text-accent font-bold hidden mt-0.5 block">※ボーナス月は別途加算あり</span>
                     </div>
                     <div class="flex items-end">
                         <span id="res_grand_monthly" class="text-3xl font-black text-accent tracking-tighter">0</span>
