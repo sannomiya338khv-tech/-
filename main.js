@@ -50,16 +50,29 @@
 
         let appData = { expenses: null };
 
-        // ダウンロードしたHTMLから保存された設定を復元する
+        // ダウンロードしたHTML、またはスマホのローカルストレージから設定を復元する
         function loadAppData() {
+            let loadedFromDOM = false;
             const storage = document.getElementById('app-data-storage');
             if (storage && storage.textContent.trim() !== "" && storage.textContent.trim() !== "{}") {
                 try {
                     const parsed = JSON.parse(storage.textContent);
-                    if (parsed.bankData) bankData = parsed.bankData;
+                    if (parsed.bankData) { bankData = parsed.bankData; loadedFromDOM = true; }
                     if (parsed.expenses) appData.expenses = parsed.expenses;
                 } catch (e) {
                     console.error("AppData Parse Error", e);
+                }
+            }
+
+            // ★DOMにデータがない(Webアプリとして開いた)場合、スマホに記憶させた金利データを読み込む
+            if (!loadedFromDOM) {
+                try {
+                    const savedBankData = localStorage.getItem('shikinAppBankData');
+                    if (savedBankData) {
+                        bankData = JSON.parse(savedBankData);
+                    }
+                } catch (e) {
+                    console.error("LocalStorage Parse Error", e);
                 }
             }
         }
@@ -827,6 +840,13 @@ function calculateMonthlyPayment(amount, rateYear, years) {
                     }
                 });
             });
+            
+            // ★更新した金利データをスマホ（ブラウザ）に永続保存する
+            try {
+                localStorage.setItem('shikinAppBankData', JSON.stringify(bankData));
+            } catch(e) {
+                console.warn("LocalStorage save error", e);
+            }
             
             closeRateModal();
             renderBankCards();
