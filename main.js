@@ -287,19 +287,47 @@
             amountInput.oninput = function() { toHalfWidth(this); handleSheetInputChange(this); }; 
             amountInput.onblur = function() { formatCurrency(this); };
             
-            const unit = document.createElement('span'); 
+        const unit = document.createElement('span'); 
             unit.className = "text-xs text-gray-500 w-4"; unit.innerText = "円";
+            
+            // ★コメント追加ボタン
+            const commentBtn = document.createElement('button');
+            commentBtn.className = "text-gray-300 hover:text-accent w-6 no-print row-action mr-1";
+            commentBtn.innerHTML = '<i class="fas fa-comment-dots"></i>';
+            commentBtn.title = "注釈コメントを追加";
             
             const delBtn = document.createElement('button'); 
             delBtn.className = "text-gray-300 hover:text-alert w-6 no-print row-action"; 
             delBtn.innerHTML = '<i class="fas fa-times"></i>'; 
-            delBtn.onclick = function() { row.remove(); calcTotal(); updateGlobalSelector(); };
+            delBtn.onclick = function() { rowContainer.remove(); calcTotal(); updateGlobalSelector(); };
             
+            // 要素を並べる箱（1段目）
             row.appendChild(handle); row.appendChild(nameInput); 
             if (toggleBtn) row.appendChild(toggleBtn); 
-            row.appendChild(amountInput); row.appendChild(unit); row.appendChild(delBtn);
-            container.appendChild(row);
-        }
+            row.appendChild(amountInput); row.appendChild(unit); 
+            row.appendChild(commentBtn); row.appendChild(delBtn);
+            
+            // 行全体を包むコンテナ（これがないと2段目にコメントを足せないため）
+            const rowContainer = document.createElement('div');
+            rowContainer.className = "expense-row-container border-b border-gray-100 py-1";
+            row.className = "flex items-center gap-2 expense-row"; // border-bを外す
+            rowContainer.appendChild(row);
+
+            // コメント欄（2段目：最初は非表示）
+            const noteInput = document.createElement('input');
+            noteInput.type = "text";
+            noteInput.className = "expense-note hidden";
+            noteInput.placeholder = "※注釈・変更理由などを入力（空なら印刷されません）";
+            rowContainer.appendChild(noteInput);
+
+            // コメントボタンを押した時の動作
+            commentBtn.onclick = function() {
+                noteInput.classList.toggle('hidden');
+                if(!noteInput.classList.contains('hidden')) noteInput.focus();
+            };
+            
+            container.appendChild(rowContainer);
+        }   
 
         function toggleContractType(row, nameInput, amountInput) {
             const currentName = nameInput.value;
@@ -1078,3 +1106,14 @@ function calculateMonthlyPayment(amount, rateYear, years) {
                 calculateLoan(true);
             }, 500); 
         };
+        // ★ 画面上の文字や入力欄をダブルクリックで赤字強調する
+        document.addEventListener('dblclick', function(e) {
+            const target = e.target;
+            // 入力欄(INPUT/SELECT)か、文字(SPAN/LABEL)なら色を切り替える
+            if (['INPUT', 'SELECT', 'SPAN', 'LABEL', 'DIV'].includes(target.tagName)) {
+                // ただし操作パネルやボタン類は除外
+                if (!target.closest('.no-print') && !target.classList.contains('sheet')) {
+                    target.classList.toggle('text-red-override');
+                }
+            }
+        });
