@@ -94,7 +94,7 @@
     <!-- 分割したCSSを読み込む -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="antialiased">
+<body class="antialiased pb-16"></body>
 
     <!-- 操作パネル -->
     <div class="no-print fixed top-0 left-0 w-full bg-gray-900 text-white p-2 z-50 shadow-lg flex justify-between items-center h-16">
@@ -680,6 +680,23 @@
         </div>
     </div>
 
+    <!-- ★ 画面下部の常駐サマリーバー -->
+    <div class="no-print fixed bottom-0 left-0 w-full bg-gray-900 text-white z-40 px-3 py-2 flex justify-between items-center shadow-[0_-4px_10px_rgba(0,0,0,0.3)]">
+        <div class="flex flex-col">
+            <span class="text-[10px] text-gray-400">借入 <span id="float_loan" class="font-bold text-gray-200 text-xs ml-1">0</span> 円</span>
+            <span class="text-[10px] text-gray-400">金利 <span id="float_rate" class="font-bold text-gray-200">0.000</span>% / <span id="float_years" class="font-bold text-gray-200">0</span>年</span>
+        </div>
+        <div class="flex items-end gap-4 text-right">
+            <div class="flex flex-col items-end hidden sm:flex">
+                <span class="text-[9px] text-gray-400">ローン月々返済</span>
+                <div class="font-bold text-sm text-gray-200"><span id="float_monthly">0</span><span class="text-[10px] ml-0.5 font-normal">円</span></div>
+            </div>
+            <div class="flex flex-col items-end">
+                <span class="text-[10px] text-accent font-bold">月々総支払額 <span class="text-[9px] font-normal text-gray-400">(目安)</span></span>
+                <div class="font-black text-xl text-accent leading-none mt-0.5"><span id="float_grand_monthly">0</span><span class="text-xs ml-0.5 font-bold">円</span></div>
+            </div>
+        </div>
+    </div>
     <!-- PWAインストール機能追加 -->
     <script src="data.js"></script>
     <!-- ★固都税用の計算プログラムを新規追加します -->

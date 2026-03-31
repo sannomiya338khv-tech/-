@@ -679,6 +679,20 @@ function calculateMonthlyPayment(amount, rateYear, years) {
                 document.getElementById('res_fee').innerText = fee.toLocaleString();
                 document.getElementById('res_guarantee').innerText = guaranteeText;
                 document.getElementById('res_guarantee_note').innerText = guaranteeNote;
+                document.getElementById('sim_display_property').innerText = propPrice.toLocaleString();
+                document.getElementById('sim_display_loan').innerText = amount.toLocaleString();
+                document.getElementById('res_monthly').innerText = monthly.toLocaleString();
+                document.getElementById('res_total').innerText = total.toLocaleString();
+                document.getElementById('res_fee').innerText = fee.toLocaleString();
+                document.getElementById('res_guarantee').innerText = guaranteeText;
+                document.getElementById('res_guarantee_note').innerText = guaranteeNote;
+
+                // ★ここから追加：常駐バーの更新
+                const floatLoan = document.getElementById('float_loan'); if(floatLoan) floatLoan.innerText = amount.toLocaleString();
+                const floatRate = document.getElementById('float_rate'); if(floatRate) floatRate.innerText = rVal.toFixed(3);
+                const floatYears = document.getElementById('float_years'); if(floatYears) floatYears.innerText = years;
+                const floatMonthly = document.getElementById('float_monthly'); if(floatMonthly) floatMonthly.innerText = monthly.toLocaleString();
+                // ★追加ここまで
 
                 // ★ボーナス関連の画面表示切り替え
                 const bonusRow = document.getElementById('res_bonus_row');
@@ -1033,6 +1047,12 @@ function calculateMonthlyPayment(amount, rateYear, years) {
                 // 総合計（ローン + ランニングコスト）を計算して表示
                 const grandMonthly = loanMonthly + runTotal;
                 document.getElementById('res_grand_monthly').innerText = grandMonthly.toLocaleString();
+
+                // ★ここから追加：常駐バーの総支払額も更新
+                const floatGrand = document.getElementById('float_grand_monthly');
+                if(floatGrand) floatGrand.innerText = grandMonthly.toLocaleString();
+                // ★追加ここまで
+
             } catch (e) {
                 console.error("calcRunningCost error: ", e);
             }
