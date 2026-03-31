@@ -315,7 +315,11 @@
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 mb-1">返済期間</label>
                         <div class="flex items-end border-b border-gray-200">
-                            <select id="sim_years" class="w-full font-bold text-xl text-right text-primary focus:border-accent outline-none bg-transparent" onchange="calculateLoan()">
+                            <!-- ★ マイナスボタン -->
+                            <button onclick="adjustYears(-1)" class="no-print mb-1 px-2 py-1 text-gray-300 hover:text-accent hover:bg-blue-50 rounded transition" title="1年減らす"><i class="fas fa-minus text-[10px]"></i></button>
+                            
+                            <!-- ★ セレクトボックス（数値を真ん中寄せにしました） -->
+                            <select id="sim_years" class="w-full font-bold text-xl text-center text-primary focus:border-accent outline-none bg-transparent" style="text-align-last: center;" onchange="calculateLoan()">
                                 <option value="35" selected="selected">35</option>
                                 <option value="40">40</option>
                                 <option value="50">50</option>
@@ -323,6 +327,10 @@
                                 <option value="25">25</option>
                                 <option value="20">20</option>
                             </select>
+                            
+                            <!-- ★ プラスボタン -->
+                            <button onclick="adjustYears(1)" class="no-print mb-1 px-2 py-1 text-gray-300 hover:text-accent hover:bg-blue-50 rounded transition" title="1年増やす"><i class="fas fa-plus text-[10px]"></i></button>
+                            
                             <span class="ml-1 text-sm font-bold text-gray-600 mb-1">年</span>
                         </div>
                     </div>

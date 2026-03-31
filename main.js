@@ -568,6 +568,35 @@ function calculateMonthlyPayment(amount, rateYear, years) {
             return Math.round((amount * rateMonth * x) / (x - 1));
         }
 
+        // 返済期間の微調整（1年単位）
+        function adjustYears(delta) {
+            const select = document.getElementById('sim_years');
+            if (!select) return;
+            
+            let currentVal = parseInt(select.value);
+            if (isNaN(currentVal)) currentVal = 35;
+            
+            // 1年足す、または引く
+            let newVal = currentVal + delta;
+            if (newVal < 1) newVal = 1;
+            if (newVal > 50) newVal = 50; // ※最大50年でストップ
+            
+            // プルダウンの中にその数字(42など)がすでに存在するかチェック
+            let optionExists = Array.from(select.options).some(opt => parseInt(opt.value) === newVal);
+            
+            // プルダウンに無い数字なら、新しく選択肢として追加する
+            if (!optionExists) {
+                const newOption = document.createElement('option');
+                newOption.value = newVal;
+                newOption.textContent = newVal;
+                select.appendChild(newOption);
+            }
+            
+            // 値をセットして、シミュレーションを再計算
+            select.value = newVal;
+            calculateLoan(); 
+        }
+
         // ★ここに追加：ボーナス加算額から「ボーナス充当分の元金」を逆算する
         function calculateBonusPrincipal(bonusAmount, rateYear, years) {
             if (bonusAmount <= 0 || isNaN(bonusAmount)) return 0;
